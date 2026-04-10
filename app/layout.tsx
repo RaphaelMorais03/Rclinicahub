@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ClinicHub - Sistema de Gestão para Clínicas',
-  description: 'Sistema completo para gestão de clínicas com controle de atendimentos, financeiro e exames.',
+  title: 'Amor Saude Pirituba - Sistema de Gestao',
+  description: 'Sistema integrado de gestao para clinicas. Controle de orcamentos, cronogramas, exames e financeiro.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
