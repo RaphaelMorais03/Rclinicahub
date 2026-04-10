@@ -85,8 +85,10 @@ interface UsuarioComPermissoes extends Usuario {
 }
 
 export default function AdminPage() {
-  const { usuario, isAdmin, user } = useAuth()
+  const { usuario, isAdmin, user, loading: authLoading, permissoes } = useAuth()
   const supabase = createClient()
+  
+  console.log('[v0] AdminPage - isAdmin:', isAdmin, 'authLoading:', authLoading, 'permissoes:', permissoes, 'usuario:', usuario)
   
   const [activeTab, setActiveTab] = useState<TabType>('usuarios')
   const [isLoading, setIsLoading] = useState(true)
@@ -496,6 +498,15 @@ export default function AdminPage() {
     u.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Aguardar carregamento das permissões antes de verificar acesso
+  if (authLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   if (!isAdmin) {
     return (
