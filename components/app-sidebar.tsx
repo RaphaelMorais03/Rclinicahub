@@ -15,15 +15,19 @@ import {
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 import {
-  Activity,
-  BarChart3,
+  Calculator,
   Calendar,
+  ClipboardList,
   DollarSign,
-  FileText,
+  FolderOpen,
+  Heart,
   LayoutDashboard,
   LogOut,
+  Receipt,
   Settings,
+  Shield,
   User,
+  Users,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -36,40 +40,53 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-const menuItems = [
+const menuPrincipal = [
   {
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    title: 'Atendimentos',
-    url: '/dashboard/atendimentos',
+    title: 'Orcamentos',
+    url: '/dashboard/orcamentos',
+    icon: Calculator,
+  },
+  {
+    title: 'Cronograma',
+    url: '/dashboard/cronograma',
     icon: Calendar,
   },
   {
-    title: 'Exames',
-    url: '/dashboard/exames',
-    icon: FileText,
+    title: 'Retirada de Exames',
+    url: '/dashboard/gaveta',
+    icon: FolderOpen,
   },
 ]
 
-const financeiroItems = [
+const menuFinanceiro = [
   {
-    title: 'Financeiro',
-    url: '/dashboard/financeiro',
-    icon: DollarSign,
+    title: 'Fechamento Medico',
+    url: '/dashboard/fechamento',
+    icon: ClipboardList,
   },
   {
-    title: 'Relatórios',
-    url: '/dashboard/relatorios',
-    icon: BarChart3,
+    title: 'Recibos',
+    url: '/dashboard/recibos',
+    icon: Receipt,
+  },
+]
+
+const menuAdmin = [
+  {
+    title: 'Administracao',
+    url: '/dashboard/admin',
+    icon: Shield,
   },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { usuario, signOut, isFinanceiro } = useAuth()
+  const { usuario, signOut, isFinanceiro, isAdmin } = useAuth()
 
   const getInitials = (name: string) => {
     return name
@@ -83,11 +100,14 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Activity className="h-5 w-5 text-primary-foreground" />
+        <div className="flex items-center gap-3 px-2 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary">
+            <Heart className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-sidebar-foreground">ClinicHub</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-sidebar-foreground">Amor Saude</span>
+            <span className="text-xs text-sidebar-foreground/60">Pirituba</span>
+          </div>
         </div>
       </SidebarHeader>
 
@@ -96,7 +116,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {menuPrincipal.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -121,11 +141,38 @@ export function AppSidebar() {
               <SidebarGroupLabel>Financeiro</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {financeiroItems.map((item) => (
+                  {menuFinanceiro.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         asChild
                         isActive={pathname === item.url}
+                        tooltip={item.title}
+                      >
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+
+        {isAdmin && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuAdmin.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.url || pathname.startsWith(item.url + '/')}
                         tooltip={item.title}
                       >
                         <Link href={item.url}>
@@ -152,13 +199,13 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                       {usuario?.nome ? getInitials(usuario.nome) : 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-medium">{usuario?.nome || 'Usuário'}</span>
-                    <span className="text-xs text-muted-foreground capitalize">
+                    <span className="font-medium">{usuario?.nome || 'Usuario'}</span>
+                    <span className="text-xs text-sidebar-foreground/60 capitalize">
                       {usuario?.cargo || 'comum'}
                     </span>
                   </div>
@@ -174,12 +221,6 @@ export function AppSidebar() {
                   <Link href="/dashboard/perfil">
                     <User className="mr-2 h-4 w-4" />
                     Meu Perfil
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/configuracoes">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurações
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
