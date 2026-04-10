@@ -30,22 +30,26 @@ export function useAuth(): AuthState {
   const supabase = createClient()
 
   const fetchUserData = useCallback(async (authUser: User) => {
+    console.log('[v0] fetchUserData - authUser.id:', authUser.id)
+    
     // Buscar dados do usuário
-    const { data: usuarioData } = await supabase
+    const { data: usuarioData, error: usuarioError } = await supabase
       .from('usuarios')
       .select('*')
       .eq('id', authUser.id)
       .single()
     
+    console.log('[v0] usuarioData:', usuarioData, 'error:', usuarioError)
     setUsuario(usuarioData)
 
     // Buscar permissões
-    const { data: permissoesData } = await supabase
+    const { data: permissoesData, error: permissoesError } = await supabase
       .from('usuarios_permissoes')
       .select('*')
       .eq('uid', authUser.id)
       .single()
     
+    console.log('[v0] permissoesData:', permissoesData, 'error:', permissoesError)
     setPermissoes(permissoesData)
 
     // Atualizar último acesso
