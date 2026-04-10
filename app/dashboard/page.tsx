@@ -2,52 +2,49 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Calendar, 
-  Package, 
-  Calculator, 
-  ClipboardList, 
-  Receipt,
-  TrendingUp,
-  Heart,
-  Settings,
-  Loader2
-} from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { 
+  Loader2, 
+  Calculator, 
+  FileText, 
+  Package, 
+  Calendar,
+  DollarSign,
+  Shield,
+  ArrowRight,
+  LogOut,
+  User
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface DashboardStats {
   examesPendentes: number
   salasHoje: number
   salasConfirmadas: number
-  caixaHoje: number
 }
 
 export default function DashboardPage() {
-  const { usuario, permissoes, loading, primeiroNome, isAdmin, isFinanceiro, canAccessOrcamentos, canAccessExames, canAccessCronograma } = useAuth()
+  const { usuario, loading, primeiroNome, isAdmin, isFinanceiro, canAccessOrcamentos, canAccessExames, canAccessCronograma } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loadingStats, setLoadingStats] = useState(true)
-  const [transitionOut, setTransitionOut] = useState(false)
+  const [transitionTo, setTransitionTo] = useState<string | null>(null)
+  const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
     const fetchStats = async () => {
-      const supabase = createClient()
       const today = new Date().toISOString().split('T')[0]
       
-      const [gavetaRes, cronogramaRes, caixaRes] = await Promise.all([
+      const [gavetaRes, cronogramaRes] = await Promise.all([
         supabase.from('gaveta_exames').select('*').eq('status', 'pendente'),
-        supabase.from('cronograma').select('*').eq('data', today),
-        supabase.from('operacao_caixa').select('*').eq('data', today).single()
+        supabase.from('cronograma').select('*').eq('data', today)
       ])
       
       setStats({
         examesPendentes: gavetaRes.data?.length || 0,
         salasHoje: cronogramaRes.data?.length || 0,
-        salasConfirmadas: cronogramaRes.data?.filter(c => c.status === 'pronto').length || 0,
-        caixaHoje: caixaRes.data ? (caixaRes.data.entradas || 0) - (caixaRes.data.saidas || 0) : 0
+        salasConfirmadas: cronogramaRes.data?.filter(c => c.status === 'pronto').length || 0
       })
       setLoadingStats(false)
     }
@@ -55,78 +52,80 @@ export default function DashboardPage() {
     if (!loading && usuario) {
       fetchStats()
     }
-  }, [loading, usuario])
+  }, [loading, usuario, supabase])
 
-  const handleModuleClick = () => {
-    setTransitionOut(true)
+  const handleModuleClick = (href: string, name: string) => {
+    setTransitionTo(name)
+    setTimeout(() => {
+      router.push(href)
+    }, 900)
   }
 
-  // Definir módulos com base nas permissões
-  const allModules = [
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
+
+  const modules = [
     {
       key: 'orcamentos',
       title: 'Orcamentos',
-      description: 'Monte orcamentos de exames com preparos',
-      icon: Calculator,
+      description: 'Consulte exames, valores, parceiros e preparos. Gere mensagens para WhatsApp.',
       href: '/dashboard/orcamentos',
-      color: 'bg-blue-500',
       canAccess: canAccessOrcamentos
-    },
-    {
-      key: 'cronograma',
-      title: 'Cronograma',
-      description: 'Agenda diaria por sala e checklist',
-      icon: Calendar,
-      href: '/dashboard/cronograma',
-      color: 'bg-purple-500',
-      badge: stats?.salasConfirmadas !== undefined && stats.salasHoje > 0 ? `${stats.salasConfirmadas}/${stats.salasHoje} prontas` : null,
-      canAccess: canAccessCronograma
-    },
-    {
-      key: 'exames',
-      title: 'Retirada de Exames',
-      description: 'Gaveta digital de exames',
-      icon: Package,
-      href: '/dashboard/gaveta',
-      color: 'bg-amber-500',
-      badge: stats?.examesPendentes ? `${stats.examesPendentes} pendentes` : null,
-      canAccess: canAccessExames
     },
     {
       key: 'fechamento',
       title: 'Fechamento Medico',
-      description: 'Calculo de repasses com impostos',
-      icon: ClipboardList,
+      description: 'Calculo de repasse, impostos PJ e geracao de recibo consolidado para impressao.',
       href: '/dashboard/fechamento',
-      color: 'bg-green-500',
       canAccess: isFinanceiro
     },
     {
-      key: 'recibos',
-      title: 'Recibos',
-      description: 'Geracao de recibos em lote',
-      icon: Receipt,
+      key: 'financeiro',
+      title: 'Financeiro',
+      description: 'Geracao de recibos em lote para colaboradores. Cadastro e controle de equipe.',
       href: '/dashboard/recibos',
-      color: 'bg-rose-500',
-      canAccess: isFinanceiro
+      canAccess: isFinanceiro,
+      hidden: !isFinanceiro
+    },
+    {
+      key: 'exames',
+      title: 'Retirada de Exames',
+      description: 'Gaveta digital de exames. Cadastre, de baixa e consulte o historico completo.',
+      href: '/dashboard/gaveta',
+      canAccess: canAccessExames
+    },
+    {
+      key: 'cronograma',
+      title: 'Cronograma',
+      description: 'Agenda diaria por sala, checklist de abertura, notas e controle de caixa.',
+      href: '/dashboard/cronograma',
+      icon: Calendar,
+      specialBg: 'bg-[#1d4ed8]',
+      canAccess: canAccessCronograma
     },
     {
       key: 'admin',
-      title: 'Administracao',
-      description: 'Usuarios, atendentes e configuracoes',
-      icon: Settings,
+      title: 'Painel Admin',
+      description: 'Gerenciar usuarios, clinica, atendentes e permissoes de acesso.',
       href: '/dashboard/admin',
-      color: 'bg-slate-700',
-      canAccess: isAdmin
+      icon: Shield,
+      specialBg: 'bg-[#92400e]',
+      specialStyle: 'border-[#fde68a] bg-[#fffbeb]',
+      titleColor: 'text-[#92400e]',
+      arrowColor: 'text-[#92400e]',
+      canAccess: isAdmin,
+      hidden: !isAdmin
     }
   ]
 
-  const modules = allModules.filter(m => m.canAccess)
+  const visibleModules = modules.filter(m => !m.hidden && m.canAccess)
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f4f8]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0A1F44]" />
       </div>
     )
   }
@@ -134,121 +133,143 @@ export default function DashboardPage() {
   return (
     <>
       {/* Overlay de transição */}
-      {transitionOut && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/90 transition-opacity">
-          <Loader2 className="h-12 w-12 animate-spin text-accent" />
+      {transitionTo && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center flex-col gap-3 bg-[#0A1F44]">
+          <span className="text-[54px] animate-pop">🏥</span>
+          <span className="text-[12px] text-white/35 tracking-[1.8px] uppercase animate-fadeUp">
+            {transitionTo}
+          </span>
         </div>
       )}
 
-      <div className="flex flex-col gap-6 p-6">
-        {/* Header com saudação */}
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent">
-            <Heart className="h-8 w-8 text-accent-foreground" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Ola, {primeiroNome || 'Usuario'}!
-            </h1>
-            <p className="text-muted-foreground">Amor Saude Pirituba - Portal Interno</p>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                <Package className="h-6 w-6 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Exames Pendentes</p>
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats?.examesPendentes || 0}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-                <Calendar className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Salas Hoje</p>
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats?.salasConfirmadas || 0}/{stats?.salasHoje || 0}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {isFinanceiro && (
-            <Card>
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Saldo Caixa</p>
-                  {loadingStats ? (
-                    <Skeleton className="h-8 w-24" />
-                  ) : (
-                    <p className="text-2xl font-bold">R$ {(stats?.caixaHoje || 0).toFixed(2)}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Modules Grid */}
-        <div>
-          <h2 className="mb-4 text-xl font-semibold text-foreground">Seus Modulos</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {modules.map((module) => (
-              <Link key={module.key} href={module.href} onClick={handleModuleClick}>
-                <Card className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${module.color}`}>
-                        <module.icon className="h-6 w-6 text-white" />
-                      </div>
-                      {module.badge && (
-                        <Badge variant="secondary">{module.badge}</Badge>
-                      )}
-                    </div>
-                    <CardTitle className="mt-4">{module.title}</CardTitle>
-                    <CardDescription>{module.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Info */}
-        <Card className="bg-primary text-primary-foreground">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Bem-vindo ao Sistema</h3>
-                <p className="text-primary-foreground/80">
-                  {modules.length === 0 
-                    ? 'Voce nao tem acesso a nenhum modulo. Contate o administrador.'
-                    : 'Selecione um modulo acima para comecar. Use o menu lateral para navegar entre as funcionalidades.'}
-                </p>
-              </div>
-              <Heart className="h-12 w-12 text-accent" />
+      <div className="min-h-screen bg-[#f0f4f8]">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-white border-b-2 border-[#e2e8f0] px-5 md:px-10 h-16 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-[#0A1F44] text-white text-xl">
+              🏥
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-[17px] font-extrabold text-[#0A1F44] tracking-tight">
+                Amor Saude
+              </div>
+              <div className="text-[10px] text-[#94a3b8]">
+                Portal Interno - Pirituba
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-[#f1f5f9] border border-[#e2e8f0] rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-[#475569] flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5" />
+              <span>{primeiroNome || 'Usuario'}</span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="bg-[#C62828] text-white rounded-lg px-4 py-1.5 text-[12px] font-bold flex items-center gap-1.5 hover:bg-[#ad1f1f] transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sair
+            </button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="max-w-[1000px] mx-auto px-6 py-12">
+          {/* Greeting */}
+          <div className="mb-9">
+            <div className="text-[13px] text-[#94a3b8] mb-1.5">
+              Bem-vindo(a) ao portal
+            </div>
+            <h1 className="text-[30px] font-black text-[#0A1F44] tracking-tight">
+              O que deseja acessar?
+            </h1>
+          </div>
+
+          {/* Modules Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {visibleModules.map((module) => {
+              const IconComponent = module.icon || (
+                module.key === 'orcamentos' ? Calculator :
+                module.key === 'fechamento' ? FileText :
+                module.key === 'financeiro' ? DollarSign :
+                module.key === 'exames' ? Package :
+                Calendar
+              )
+              
+              return (
+                <div
+                  key={module.key}
+                  onClick={() => handleModuleClick(module.href, module.title)}
+                  className={`bg-white border-[1.5px] rounded-[20px] p-7 cursor-pointer transition-all duration-200 flex flex-col gap-3.5 relative overflow-hidden shadow-[0_2px_12px_rgba(10,31,68,0.06)] group hover:border-[#0A1F44] hover:-translate-y-[3px] hover:shadow-[0_12px_32px_rgba(10,31,68,0.13)] ${
+                    module.specialStyle || 'border-[#e2e8f0]'
+                  }`}
+                >
+                  {/* Top accent bar */}
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#C62828] scale-x-0 origin-left transition-transform duration-250 group-hover:scale-x-100" />
+                  
+                  {/* Icon */}
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-[26px] ${
+                    module.specialBg || 'bg-[#0A1F44]'
+                  }`}>
+                    {module.key === 'orcamentos' && '🏥'}
+                    {module.key === 'fechamento' && '🏥'}
+                    {module.key === 'financeiro' && '🏥'}
+                    {module.key === 'exames' && '🏥'}
+                    {module.key === 'cronograma' && <Calendar className="h-5.5 w-5.5" />}
+                    {module.key === 'admin' && <Shield className="h-5.5 w-5.5" />}
+                  </div>
+
+                  {/* Content */}
+                  <div>
+                    <h2 className={`text-[18px] font-extrabold tracking-tight mb-0.5 ${
+                      module.titleColor || 'text-[#0A1F44]'
+                    }`}>
+                      {module.title}
+                    </h2>
+                    <p className="text-[13px] text-[#94a3b8] leading-relaxed">
+                      {module.description}
+                    </p>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className={`mt-auto text-[12px] font-bold flex items-center gap-1.5 transition-all duration-180 group-hover:gap-2.5 ${
+                    module.arrowColor || 'text-[#C62828]'
+                  }`}>
+                    <ArrowRight className="h-3 w-3" />
+                    {module.key === 'admin' ? 'Gerenciar' : 'Acessar'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Empty state */}
+          {visibleModules.length === 0 && (
+            <div className="text-center py-12 text-[#94a3b8]">
+              <p className="text-[14px]">
+                Voce nao tem acesso a nenhum modulo. Contate o administrador.
+              </p>
+            </div>
+          )}
+        </main>
       </div>
+
+      <style jsx>{`
+        @keyframes pop {
+          from { opacity: 0; transform: scale(0.3); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pop {
+          animation: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .animate-fadeUp {
+          animation: fadeUp 0.3s 0.22s ease both;
+        }
+      `}</style>
     </>
   )
 }
