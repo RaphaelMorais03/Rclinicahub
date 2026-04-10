@@ -1,3 +1,4 @@
+'use client'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardStats } from '@/components/dashboard/dashboard-stats'
 import { RecentAtendimentos } from '@/components/dashboard/recent-atendimentos'
