@@ -86,9 +86,7 @@ const menuAdmin = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { usuario, permissoes, signOut, isFinanceiro, isAdmin, loading } = useAuth()
-
-  console.log('[v0] AppSidebar - isAdmin:', isAdmin, 'isFinanceiro:', isFinanceiro, 'permissoes:', permissoes, 'usuario:', usuario, 'loading:', loading)
+  const { usuario, signOut, isFinanceiro, isAdmin } = useAuth()
 
   const getInitials = (name: string) => {
     return name

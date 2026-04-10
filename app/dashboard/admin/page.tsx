@@ -85,10 +85,8 @@ interface UsuarioComPermissoes extends Usuario {
 }
 
 export default function AdminPage() {
-  const { usuario, isAdmin, user, loading: authLoading, permissoes } = useAuth()
+  const { usuario, isAdmin, user, loading: authLoading } = useAuth()
   const supabase = createClient()
-  
-  console.log('[v0] AdminPage - isAdmin:', isAdmin, 'authLoading:', authLoading, 'permissoes:', permissoes, 'usuario:', usuario)
   
   const [activeTab, setActiveTab] = useState<TabType>('usuarios')
   const [isLoading, setIsLoading] = useState(true)
@@ -108,7 +106,7 @@ export default function AdminPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<unknown>(null)
   const [formData, setFormData] = useState<Record<string, unknown>>({})
-  const [permissoes, setPermissoes] = useState<Partial<UsuarioPermissoes>>({})
+  const [editingPermissoes, setEditingPermissoes] = useState<Partial<UsuarioPermissoes>>({})
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
@@ -167,7 +165,7 @@ export default function AdminPage() {
   const openPermissoesDialog = (usuario: UsuarioComPermissoes) => {
     setEditingItem(usuario)
     const perms = usuario.usuarios_permissoes?.[0] || {}
-    setPermissoes({
+    setEditingPermissoes({
       financeiro: perms.financeiro || false,
       orcamento: perms.orcamento !== false,
       exames: perms.exames !== false,
@@ -261,11 +259,11 @@ export default function AdminPage() {
       
       const { error } = await supabase.from('usuarios_permissoes').upsert({
         uid: usuarioEdit.id,
-        financeiro: permissoes.financeiro || false,
-        orcamento: permissoes.orcamento !== false,
-        exames: permissoes.exames !== false,
-        cronograma: permissoes.cronograma !== false,
-        admin: permissoes.admin || false,
+        financeiro: editingPermissoes.financeiro || false,
+        orcamento: editingPermissoes.orcamento !== false,
+        exames: editingPermissoes.exames !== false,
+        cronograma: editingPermissoes.cronograma !== false,
+        admin: editingPermissoes.admin || false,
         updated_at: new Date().toISOString()
       }, { onConflict: 'uid' })
       
@@ -1125,8 +1123,8 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Acesso ao modulo de orcamentos</p>
               </div>
               <Switch
-                checked={permissoes.orcamento !== false}
-                onCheckedChange={(v) => setPermissoes({ ...permissoes, orcamento: v })}
+                checked={editingPermissoes.orcamento !== false}
+                onCheckedChange={(v) => setEditingPermissoes({ ...editingPermissoes, orcamento: v })}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -1135,8 +1133,8 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Acesso a gaveta de exames</p>
               </div>
               <Switch
-                checked={permissoes.exames !== false}
-                onCheckedChange={(v) => setPermissoes({ ...permissoes, exames: v })}
+                checked={editingPermissoes.exames !== false}
+                onCheckedChange={(v) => setEditingPermissoes({ ...editingPermissoes, exames: v })}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -1145,8 +1143,8 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Acesso ao cronograma e caixa</p>
               </div>
               <Switch
-                checked={permissoes.cronograma !== false}
-                onCheckedChange={(v) => setPermissoes({ ...permissoes, cronograma: v })}
+                checked={editingPermissoes.cronograma !== false}
+                onCheckedChange={(v) => setEditingPermissoes({ ...editingPermissoes, cronograma: v })}
               />
             </div>
             <div className="flex items-center justify-between border-t pt-4">
@@ -1155,8 +1153,8 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Acesso a fechamento e recibos</p>
               </div>
               <Switch
-                checked={permissoes.financeiro || false}
-                onCheckedChange={(v) => setPermissoes({ ...permissoes, financeiro: v })}
+                checked={editingPermissoes.financeiro || false}
+                onCheckedChange={(v) => setEditingPermissoes({ ...editingPermissoes, financeiro: v })}
               />
             </div>
             <div className="flex items-center justify-between border-t pt-4">
@@ -1165,8 +1163,8 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Acesso total ao sistema</p>
               </div>
               <Switch
-                checked={permissoes.admin || false}
-                onCheckedChange={(v) => setPermissoes({ ...permissoes, admin: v })}
+                checked={editingPermissoes.admin || false}
+                onCheckedChange={(v) => setEditingPermissoes({ ...editingPermissoes, admin: v })}
               />
             </div>
           </div>

@@ -30,30 +30,34 @@ export function useAuth(): AuthState {
   const supabase = createClient()
 
   const fetchUserData = useCallback(async (authUser: User) => {
-    console.log('[v0] fetchUserData - authUser.id:', authUser.id)
-    
-    // Buscar dados do usuário
-    const { data: usuarioData, error: usuarioError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', authUser.id)
-      .single()
-    
-    console.log('[v0] usuarioData:', usuarioData, 'error:', usuarioError)
-    setUsuario(usuarioData)
+    try {
+      // Buscar dados do usuário
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
+      
+      setUsuario(usuarioData)
 
-    // Buscar permissões
-    const { data: permissoesData, error: permissoesError } = await supabase
-      .from('usuarios_permissoes')
-      .select('*')
-      .eq('uid', authUser.id)
-      .single()
-    
-    console.log('[v0] permissoesData:', permissoesData, 'error:', permissoesError)
-    setPermissoes(permissoesData)
+      // Buscar permissões
+      const { data: permissoesData } = await supabase
+        .from('usuarios_permissoes')
+        .select('*')
+        .eq('uid', authUser.id)
+        .single()
+      
+      setPermissoes(permissoesData)
 
-    // Atualizar último acesso
-    await supabase.rpc('update_ultimo_acesso', { user_uid: authUser.id })
+      // Atualizar último acesso (ignorar erros)
+      try {
+        await supabase.rpc('update_ultimo_acesso', { user_uid: authUser.id })
+      } catch {
+        // Ignorar erro de RPC
+      }
+    } catch {
+      // Ignorar erros
+    }
   }, [supabase])
 
   const refreshPermissoes = useCallback(async () => {
@@ -107,7 +111,7 @@ export function useAuth(): AuthState {
     router.push('/auth/login')
   }
 
-  // Verificações de permissão
+  // Verificações de permissão - usando cargo da tabela usuarios como fallback
   const isAdmin = permissoes?.admin === true || usuario?.cargo === 'admin'
   const isFinanceiro = permissoes?.financeiro === true || usuario?.cargo === 'financeiro' || isAdmin
   const canAccessOrcamentos = permissoes?.orcamento === true || isAdmin
@@ -131,27 +135,4 @@ export function useAuth(): AuthState {
     primeiroNome,
     refreshPermissoes,
   }
-}
-
-// Hook para registrar logs de auditoria
-export function useAuditLog() {
-  const supabase = createClient()
-  const { user } = useAuth()
-
-  const log = useCallback(async (
-    tipo: 'info' | 'success' | 'warning' | 'error',
-    msg: string,
-    dados?: Record<string, unknown>
-  ) => {
-    if (!user) return
-
-    await supabase.from('logs').insert({
-      tipo,
-      msg,
-      uid: user.id,
-      dados
-    })
-  }, [supabase, user])
-
-  return { log }
 }
