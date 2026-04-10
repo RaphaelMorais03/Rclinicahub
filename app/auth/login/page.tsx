@@ -4,21 +4,54 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Heart, Lock, Mail } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Heart, Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
   const router = useRouter()
+  const supabase = createClient()
+
+  // Detectar sessão ativa e redirecionar
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      } else {
+        setCheckingSession(false)
+      }
+    }
+    checkSession()
+  }, [supabase, router])
+
+  const getErrorMessage = (errorMessage: string): string => {
+    if (errorMessage.includes('Invalid login credentials')) {
+      return 'E-mail ou senha incorretos. Verifique suas credenciais.'
+    }
+    if (errorMessage.includes('Email not confirmed')) {
+      return 'E-mail nao confirmado. Verifique sua caixa de entrada.'
+    }
+    if (errorMessage.includes('Too many requests') || errorMessage.includes('rate limit')) {
+      return 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'
+    }
+    if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+      return 'Erro de conexao. Verifique sua internet e tente novamente.'
+    }
+    if (errorMessage.includes('User not found')) {
+      return 'Usuario nao encontrado. Verifique o e-mail digitado.'
+    }
+    return 'Ocorreu um erro ao fazer login. Tente novamente.'
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -30,49 +63,44 @@ export default function LoginPage() {
       if (error) throw error
       router.push('/dashboard')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Ocorreu um erro ao fazer login')
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
+      setError(getErrorMessage(errorMsg))
     } finally {
       setIsLoading(false)
     }
   }
 
-  return (
-    <div className="flex min-h-svh w-full">
-      {/* Lado esquerdo - Branding */}
-      <div className="hidden w-1/2 flex-col items-center justify-center bg-primary p-12 lg:flex">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-accent">
-            <Heart className="h-12 w-12 text-accent-foreground" />
-          </div>
-          <h1 className="text-4xl font-bold text-primary-foreground">Amor Saude</h1>
-          <p className="mt-2 text-xl text-primary-foreground/80">Pirituba</p>
-          <p className="mt-8 max-w-md text-primary-foreground/70">
-            Sistema integrado de gestao para clinicas. Controle seus atendimentos, 
-            financeiro e exames em um so lugar.
-          </p>
+  // Tela de carregamento enquanto verifica sessão
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-svh w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+          <p className="text-muted-foreground">Verificando sessao...</p>
         </div>
       </div>
+    )
+  }
 
-      {/* Lado direito - Formulário */}
-      <div className="flex w-full flex-col items-center justify-center bg-background p-8 lg:w-1/2">
-        {/* Logo mobile */}
-        <div className="mb-8 flex flex-col items-center lg:hidden">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent">
-            <Heart className="h-8 w-8 text-accent-foreground" />
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        {/* Logo e marca */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-accent">
+            <Heart className="h-10 w-10 text-accent-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-primary">Amor Saude</h1>
-          <p className="text-muted-foreground">Pirituba</p>
+          <h1 className="text-3xl font-bold text-primary">Amor Saude</h1>
+          <p className="mt-1 text-lg text-muted-foreground">Portal Interno - Pirituba</p>
         </div>
 
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold text-foreground">Bem-vindo</h2>
-            <p className="mt-2 text-muted-foreground">
-              Faca login para acessar o sistema
-            </p>
+        {/* Card do formulário */}
+        <div className="rounded-xl border bg-card p-8 shadow-sm">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-semibold text-card-foreground">Entrar no Sistema</h2>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-5">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">E-mail</FieldLabel>
@@ -86,6 +114,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
+                    disabled={isLoading}
                   />
                 </div>
               </Field>
@@ -96,13 +125,26 @@ export default function LoginPage() {
                   <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="********"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </Field>
 
@@ -118,21 +160,22 @@ export default function LoginPage() {
                 disabled={isLoading}
                 size="lg"
               >
-                {isLoading ? 'Entrando...' : 'Entrar'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
             </FieldGroup>
           </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Ainda nao tem conta?{' '}
-            <Link
-              href="/auth/sign-up"
-              className="font-medium text-accent underline underline-offset-4 hover:text-accent/80"
-            >
-              Cadastre-se
-            </Link>
-          </div>
         </div>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Sistema exclusivo para colaboradores da clinica.
+        </p>
       </div>
     </div>
   )

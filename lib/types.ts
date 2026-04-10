@@ -6,8 +6,26 @@ export interface Usuario {
   nome: string
   email: string
   cargo: Cargo
+  ultimo_acesso: string | null
+  criado_em: string | null
   created_at: string
   updated_at: string
+}
+
+export interface UsuarioPermissoes {
+  id: string
+  uid: string
+  financeiro: boolean
+  orcamento: boolean
+  exames: boolean
+  cronograma: boolean
+  admin: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface UsuarioComPermissoes extends Usuario {
+  permissoes?: UsuarioPermissoes
 }
 
 export interface Clinica {
@@ -19,8 +37,18 @@ export interface Clinica {
   telefone: string | null
   email: string | null
   logo_url: string | null
+  horario: string | null
+  empresa: string | null
+  atualizado_em: string | null
   created_at: string
   updated_at: string
+}
+
+export interface Logo {
+  id: string
+  data_url: string
+  versao: string
+  atualizado_em: string
 }
 
 export interface Atendente {
@@ -32,10 +60,25 @@ export interface Atendente {
   updated_at: string
 }
 
+export interface AcessoFinanceiro {
+  id: string
+  email: string
+  adicionado_em: string
+}
+
+export interface ExamePreco {
+  exam_id: string
+  ct: number | null
+  part: number | null
+  editado_em: string
+}
+
 export interface Colaborador {
   id: string
   nome: string
   cpf: string
+  cargo: string | null
+  valor_padrao: number
   ativo: boolean
   created_at: string
   updated_at: string
@@ -70,6 +113,26 @@ export interface GavetaExame {
   updated_at: string
 }
 
+export interface ExameRetirado {
+  id: string
+  paciente: string
+  tipo: string
+  data_exame: string | null
+  quem_retirou: string | null
+  atendente_entregou: string | null
+  retirado_em: string
+}
+
+export interface CronoAgenda {
+  id: string
+  dia: 'Segunda' | 'Terca' | 'Quarta' | 'Quinta' | 'Sexta' | 'Sabado'
+  sala: string
+  medico: string | null
+  especialidade: string | null
+  turno: 'Manha' | 'Tarde'
+  atualizado_em: string
+}
+
 export interface Cronograma {
   id: string
   data: string
@@ -91,6 +154,37 @@ export interface CronogramaNota {
   tipo: 'comum' | 'recado' | 'limpeza'
   concluido: boolean
   user_id: string
+  created_at: string
+}
+
+export interface OperacaoCaixa {
+  id: string
+  data: string
+  entradas: number
+  saidas: number
+  atualizado_em: string
+}
+
+export interface OperacaoVale {
+  id: string
+  data: string
+  paciente: string
+  cpf: string | null
+  especialidade: string | null
+  valor: number
+  hora: string
+  created_at: string
+}
+
+export interface OperacaoChecklist {
+  id: string
+  data: string
+  item_id: string
+  titulo: string
+  instrucao: string | null
+  icone: string
+  feito: boolean
+  user_id: string | null
   created_at: string
 }
 
@@ -121,6 +215,9 @@ export interface Profissional {
   regime: 'funcionario' | 'pj-presumido'
   categoria: string
   chave_pix: string | null
+  especialidade: string | null
+  percentual: number
+  tipo: 'medico' | 'terapeuta' | 'parceiro'
   ativo: boolean
   created_at: string
   updated_at: string
@@ -205,6 +302,15 @@ export interface OrcamentoItem {
   parceiro?: Parceiro
 }
 
+export interface Log {
+  id: string
+  tipo: 'info' | 'success' | 'warning' | 'error'
+  msg: string
+  ts: string
+  uid: string | null
+  dados: Record<string, unknown> | null
+}
+
 // Tipos legados (mantidos para compatibilidade)
 export interface Atendimento {
   id: string
@@ -264,6 +370,9 @@ export interface ProfissionalForm {
   regime: 'funcionario' | 'pj-presumido'
   categoria?: string
   chave_pix?: string
+  especialidade?: string
+  percentual?: number
+  tipo?: 'medico' | 'terapeuta' | 'parceiro'
 }
 
 export interface FechamentoForm {
@@ -279,6 +388,8 @@ export interface FechamentoForm {
 export interface ColaboradorForm {
   nome: string
   cpf: string
+  cargo?: string
+  valor_padrao?: number
 }
 
 export interface ReciboForm {
@@ -308,6 +419,20 @@ export interface AtendenteForm {
   apelido?: string
 }
 
+export interface UsuarioForm {
+  nome: string
+  email: string
+  senha?: string
+}
+
+export interface PermissoesForm {
+  financeiro: boolean
+  orcamento: boolean
+  exames: boolean
+  cronograma: boolean
+  admin: boolean
+}
+
 // Constantes de impostos PJ Presumido
 export const IMPOSTOS_PJ = {
   PIS: 0.0065,
@@ -334,3 +459,62 @@ export function calcularImpostosPJ(subtotal: number) {
     liquido: Math.round(liquido * 100) / 100
   }
 }
+
+// Função para calcular repasse com percentual
+export function calcularRepasse(total: number, percentual: number) {
+  return Math.round(total * (percentual / 100) * 100) / 100
+}
+
+// Cores por tempo de espera da gaveta
+export function getCorPorTempoEspera(dataExame: string): string {
+  const hoje = new Date()
+  const dataEx = new Date(dataExame)
+  const diffDias = Math.floor((hoje.getTime() - dataEx.getTime()) / (1000 * 60 * 60 * 24))
+  
+  if (diffDias <= 0) return 'bg-green-100 border-green-500' // Hoje
+  if (diffDias <= 3) return 'bg-amber-100 border-amber-500' // 1-3 dias
+  if (diffDias <= 7) return 'bg-orange-100 border-orange-500' // 3-7 dias
+  return 'bg-red-100 border-red-500' // 7+ dias
+}
+
+// Categorias de recibo
+export const CATEGORIAS_RECIBO = [
+  'Bonificação',
+  'Vale-Transporte',
+  'Salário',
+  'Adiantamento',
+  'Cesta Básica',
+  'Vale-Refeição',
+  'Comissão',
+  'Outros'
+]
+
+// Formas de pagamento
+export const FORMAS_PAGAMENTO = [
+  'PIX',
+  'Transferência',
+  'Dinheiro',
+  'Cheque'
+]
+
+// Itens padrão do checklist de abertura
+export const CHECKLIST_PADRAO = [
+  { id: 'impressora', titulo: 'Ligar Impressoras', instrucao: 'Verificar se as impressoras estão ligadas e com papel', icone: 'printer' },
+  { id: 'ar', titulo: 'Ar Condicionado', instrucao: 'Ligar os ar condicionados das salas', icone: 'thermometer' },
+  { id: 'chave', titulo: 'Conferir Chaves', instrucao: 'Verificar se todas as chaves estão no lugar', icone: 'key' },
+  { id: 'computadores', titulo: 'Ligar Computadores', instrucao: 'Ligar todos os computadores e verificar funcionamento', icone: 'monitor' },
+  { id: 'recepcao', titulo: 'Organizar Recepção', instrucao: 'Verificar limpeza e organização da recepção', icone: 'home' },
+  { id: 'agenda', titulo: 'Verificar Agenda', instrucao: 'Conferir agenda do dia no sistema', icone: 'calendar' }
+]
+
+// Tipos de exame para gaveta
+export const TIPOS_EXAME = [
+  'ECO - Ecocardiograma',
+  'EEG - Eletroencefalograma',
+  'USG - Ultrassom',
+  'Potencial Evocado',
+  'Holter',
+  'MAPA',
+  'Teste Ergométrico',
+  'Outros'
+]
