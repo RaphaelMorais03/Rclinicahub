@@ -32,7 +32,7 @@ export function useAuth(): AuthState {
   const fetchUserData = useCallback(async (authUser: User) => {
     try {
       // Buscar dados do usuário
-      const { data: usuarioData } = await supabase
+      const { data: usuarioData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', authUser.id)
@@ -41,13 +41,24 @@ export function useAuth(): AuthState {
       setUsuario(usuarioData)
 
       // Buscar permissões
-      const { data: permissoesData } = await supabase
+      const { data: permissoesData, error: permError } = await supabase
         .from('usuarios_permissoes')
         .select('*')
         .eq('uid', authUser.id)
         .single()
       
       setPermissoes(permissoesData)
+      
+      // LOG ESTRATEGICO: Diagnostico completo em um unico ponto
+      console.log('[AUTH-DEBUG]', JSON.stringify({
+        uid: authUser.id,
+        email: authUser.email,
+        usuario: usuarioData ? { cargo: usuarioData.cargo, nome: usuarioData.nome } : null,
+        userError: userError?.message || null,
+        permissoes: permissoesData ? { admin: permissoesData.admin, financeiro: permissoesData.financeiro } : null,
+        permError: permError?.message || null,
+        isAdmin: permissoesData?.admin === true || usuarioData?.cargo === 'admin'
+      }))
 
       // Atualizar último acesso (ignorar erros)
       try {
