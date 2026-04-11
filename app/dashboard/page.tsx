@@ -72,29 +72,24 @@ export default function DashboardPage() {
       title: 'Orcamentos',
       description: 'Consulte exames, valores, parceiros e preparos. Gere mensagens para WhatsApp.',
       href: '/dashboard/orcamentos',
-      canAccess: canAccessOrcamentos
     },
     {
       key: 'fechamento',
       title: 'Fechamento Medico',
       description: 'Calculo de repasse, impostos PJ e geracao de recibo consolidado para impressao.',
       href: '/dashboard/fechamento',
-      canAccess: isFinanceiro
     },
     {
       key: 'financeiro',
       title: 'Financeiro',
       description: 'Geracao de recibos em lote para colaboradores. Cadastro e controle de equipe.',
       href: '/dashboard/recibos',
-      canAccess: isFinanceiro,
-      hidden: !isFinanceiro
     },
     {
       key: 'exames',
       title: 'Retirada de Exames',
       description: 'Gaveta digital de exames. Cadastre, de baixa e consulte o historico completo.',
       href: '/dashboard/gaveta',
-      canAccess: canAccessExames
     },
     {
       key: 'cronograma',
@@ -103,7 +98,6 @@ export default function DashboardPage() {
       href: '/dashboard/cronograma',
       icon: Calendar,
       specialBg: 'bg-[#1d4ed8]',
-      canAccess: canAccessCronograma
     },
     {
       key: 'admin',
@@ -115,12 +109,10 @@ export default function DashboardPage() {
       specialStyle: 'border-[#fde68a] bg-[#fffbeb]',
       titleColor: 'text-[#92400e]',
       arrowColor: 'text-[#92400e]',
-      canAccess: isAdmin,
-      hidden: !isAdmin
     }
   ]
 
-  const visibleModules = modules.filter(m => !m.hidden && m.canAccess)
+  const visibleModules = modules
 
   if (loading) {
     return (

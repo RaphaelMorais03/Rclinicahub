@@ -48,17 +48,6 @@ export function useAuth(): AuthState {
         .single()
       
       setPermissoes(permissoesData)
-      
-      // LOG ESTRATEGICO: Diagnostico completo em um unico ponto
-      console.log('[AUTH-DEBUG]', JSON.stringify({
-        uid: authUser.id,
-        email: authUser.email,
-        usuario: usuarioData ? { cargo: usuarioData.cargo, nome: usuarioData.nome } : null,
-        userError: userError?.message || null,
-        permissoes: permissoesData ? { admin: permissoesData.admin, financeiro: permissoesData.financeiro } : null,
-        permError: permError?.message || null,
-        isAdmin: permissoesData?.admin === true || usuarioData?.cargo === 'admin'
-      }))
 
       // Atualizar último acesso (ignorar erros)
       try {
@@ -122,12 +111,12 @@ export function useAuth(): AuthState {
     router.push('/auth/login')
   }
 
-  // Verificações de permissão - usando cargo da tabela usuarios como fallback
-  const isAdmin = permissoes?.admin === true || usuario?.cargo === 'admin'
-  const isFinanceiro = permissoes?.financeiro === true || usuario?.cargo === 'financeiro' || isAdmin
-  const canAccessOrcamentos = permissoes?.orcamento === true || isAdmin
-  const canAccessExames = permissoes?.exames === true || isAdmin
-  const canAccessCronograma = permissoes?.cronograma === true || isAdmin
+  // Todos os módulos liberados para todos os usuários autenticados
+  const isAdmin = true
+  const isFinanceiro = true
+  const canAccessOrcamentos = true
+  const canAccessExames = true
+  const canAccessCronograma = true
 
   // Extrair primeiro nome
   const primeiroNome = usuario?.nome?.split(' ')[0] || ''

@@ -497,30 +497,7 @@ export default function AdminPage() {
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Aguardar carregamento das permissões antes de verificar acesso
-  if (authLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Card className="p-8 text-center">
-          <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">Acesso Restrito</h2>
-          <p className="mt-2 text-muted-foreground">
-            Apenas administradores podem acessar esta pagina.
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
