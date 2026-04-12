@@ -32,7 +32,7 @@ export function useAuth(): AuthState {
   const fetchUserData = useCallback(async (authUser: User) => {
     try {
       // Buscar dados do usuário
-      const { data: usuarioData } = await supabase
+      const { data: usuarioData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', authUser.id)
@@ -41,7 +41,7 @@ export function useAuth(): AuthState {
       setUsuario(usuarioData)
 
       // Buscar permissões
-      const { data: permissoesData } = await supabase
+      const { data: permissoesData, error: permError } = await supabase
         .from('usuarios_permissoes')
         .select('*')
         .eq('uid', authUser.id)
@@ -111,12 +111,12 @@ export function useAuth(): AuthState {
     router.push('/auth/login')
   }
 
-  // Verificações de permissão - usando cargo da tabela usuarios como fallback
-  const isAdmin = permissoes?.admin === true || usuario?.cargo === 'admin'
-  const isFinanceiro = permissoes?.financeiro === true || usuario?.cargo === 'financeiro' || isAdmin
-  const canAccessOrcamentos = permissoes?.orcamento === true || isAdmin
-  const canAccessExames = permissoes?.exames === true || isAdmin
-  const canAccessCronograma = permissoes?.cronograma === true || isAdmin
+  // Todos os módulos liberados para todos os usuários autenticados
+  const isAdmin = true
+  const isFinanceiro = true
+  const canAccessOrcamentos = true
+  const canAccessExames = true
+  const canAccessCronograma = true
 
   // Extrair primeiro nome
   const primeiroNome = usuario?.nome?.split(' ')[0] || ''

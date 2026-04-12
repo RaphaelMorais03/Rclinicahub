@@ -55,8 +55,10 @@ import {
   Wifi,
   WifiOff,
   Loader2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import type { GavetaExame, Atendente, ExameRetirado } from '@/lib/types'
 import { TIPOS_EXAME, getCorPorTempoEspera } from '@/lib/types'
 
@@ -311,6 +313,11 @@ export default function GavetaPage() {
     <div className="flex h-full flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Retirada de Exames</h1>
             <p className="text-muted-foreground">Gaveta digital de exames para entrega</p>

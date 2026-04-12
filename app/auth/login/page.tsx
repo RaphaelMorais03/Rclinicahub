@@ -1,12 +1,9 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Heart, Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -18,7 +15,6 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Detectar sessão ativa e redirecionar
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -33,27 +29,34 @@ export default function LoginPage() {
 
   const getErrorMessage = (errorMessage: string): string => {
     if (errorMessage.includes('Invalid login credentials')) {
-      return 'E-mail ou senha incorretos. Verifique suas credenciais.'
+      return 'E-mail ou senha incorretos.'
     }
     if (errorMessage.includes('Email not confirmed')) {
       return 'E-mail nao confirmado. Verifique sua caixa de entrada.'
     }
     if (errorMessage.includes('Too many requests') || errorMessage.includes('rate limit')) {
-      return 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'
+      return 'Muitas tentativas. Aguarde alguns minutos.'
     }
     if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-      return 'Erro de conexao. Verifique sua internet e tente novamente.'
-    }
-    if (errorMessage.includes('User not found')) {
-      return 'Usuario nao encontrado. Verifique o e-mail digitado.'
+      return 'Erro de conexao. Tente novamente.'
     }
     return 'Ocorreu um erro ao fazer login. Tente novamente.'
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
+    
+    if (!email.trim()) {
+      setError('Informe o e-mail.')
+      return
+    }
+    if (!password) {
+      setError('Informe a senha.')
+      return
+    }
+
+    setIsLoading(true)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -70,113 +73,140 @@ export default function LoginPage() {
     }
   }
 
-  // Tela de carregamento enquanto verifica sessão
   if (checkingSession) {
     return (
-      <div className="flex min-h-svh w-full items-center justify-center bg-background">
+      <div className="flex min-h-screen w-full items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-accent" />
-          <p className="text-muted-foreground">Verificando sessao...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-[#0A1F44]" />
+          <p className="text-[#94a3b8]">Verificando sessao...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen w-full items-center justify-center bg-white p-4">
+      <div className="w-full max-w-[380px]">
         {/* Logo e marca */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-accent">
-            <Heart className="h-10 w-10 text-accent-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold text-primary">Amor Saude</h1>
-          <p className="mt-1 text-lg text-muted-foreground">Portal Interno - Pirituba</p>
+        <div className="mb-8">
+          <h1 className="text-[28px] font-black tracking-tight text-[#0A1F44] mb-1">
+            Amor Saude
+          </h1>
+          <p className="text-[13px] text-[#94a3b8]">Portal Interno - Pirituba</p>
         </div>
 
-        {/* Card do formulário */}
-        <div className="rounded-xl border bg-card p-8 shadow-sm">
-          <div className="mb-6 text-center">
-            <h2 className="text-xl font-semibold text-card-foreground">Entrar no Sistema</h2>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">E-mail</FieldLabel>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    disabled={isLoading}
-                  />
-                </div>
-              </Field>
-              
-              <Field>
-                <FieldLabel htmlFor="password">Senha</FieldLabel>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="********"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </Field>
-
-              {error && (
-                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
-                disabled={isLoading}
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
-                  </>
-                ) : (
-                  'Entrar'
-                )}
-              </Button>
-            </FieldGroup>
-          </form>
+        {/* Tag */}
+        <div className="text-[10px] font-extrabold tracking-[1.5px] uppercase text-[#C62828] mb-2.5">
+          Acesso ao sistema
         </div>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Sistema exclusivo para colaboradores da clinica.
+        
+        {/* Título */}
+        <h2 className="text-[28px] font-black tracking-tight text-[#0A1F44] mb-1.5">
+          Entrar no Portal
+        </h2>
+        <p className="text-[13px] text-[#94a3b8] mb-8">
+          Use seu e-mail e senha para acessar
         </p>
+
+        <form onSubmit={handleLogin}>
+          {/* Campo E-mail */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold tracking-[0.7px] uppercase text-[#64748b] mb-2">
+              E-mail
+            </label>
+            <div 
+              className={`flex items-center border-[1.5px] rounded-xl bg-[#f8fafc] transition-all duration-200 ${
+                error ? 'border-[#C62828] shadow-[0_0_0_3px_rgba(198,40,40,0.08)]' : 'border-[#e2e8f0] focus-within:border-[#0A1F44] focus-within:shadow-[0_0_0_3px_rgba(10,31,68,0.08)] focus-within:bg-white'
+              }`}
+            >
+              <span className="px-3.5 text-[#94a3b8]">
+                <Mail className="h-3.5 w-3.5" />
+              </span>
+              <input
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                className="flex-1 py-3.5 pr-3.5 bg-transparent text-[14px] text-[#1e293b] placeholder:text-[#cbd5e1] outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Campo Senha */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold tracking-[0.7px] uppercase text-[#64748b] mb-2">
+              Senha
+            </label>
+            <div 
+              className={`flex items-center border-[1.5px] rounded-xl bg-[#f8fafc] transition-all duration-200 ${
+                error ? 'border-[#C62828] shadow-[0_0_0_3px_rgba(198,40,40,0.08)]' : 'border-[#e2e8f0] focus-within:border-[#0A1F44] focus-within:shadow-[0_0_0_3px_rgba(10,31,68,0.08)] focus-within:bg-white'
+              }`}
+            >
+              <span className="px-3.5 text-[#94a3b8]">
+                <Lock className="h-3.5 w-3.5" />
+              </span>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className="flex-1 py-3.5 bg-transparent text-[14px] text-[#1e293b] placeholder:text-[#cbd5e1] outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="px-3.5 text-[#94a3b8] hover:text-[#0A1F44] transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Mensagem de erro */}
+          {error && (
+            <div className="flex items-center gap-2 bg-[#fff5f5] border border-[#fecaca] rounded-xl px-3.5 py-3 mb-4.5 animate-shake">
+              <AlertCircle className="h-4 w-4 text-[#C62828] flex-shrink-0" />
+              <span className="text-[13px] font-medium text-[#C62828]">{error}</span>
+            </div>
+          )}
+
+          {/* Botão */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-4 bg-[#0A1F44] text-white rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 shadow-[0_4px_18px_rgba(10,31,68,0.26)] hover:bg-[#122b5e] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Autenticando...
+              </>
+            ) : (
+              'Entrar no Portal'
+            )}
+          </button>
+        </form>
       </div>
+
+      <style jsx>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-5px); }
+          40% { transform: translateX(5px); }
+          60% { transform: translateX(-3px); }
+          80% { transform: translateX(3px); }
+        }
+        .animate-shake {
+          animation: shake 0.38s ease;
+        }
+      `}</style>
     </div>
   )
 }

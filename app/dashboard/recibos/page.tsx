@@ -44,8 +44,10 @@ import {
   Printer,
   Search,
   Edit,
-  Loader2
+  Loader2,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import type { Colaborador } from '@/lib/types'
 import { CATEGORIAS_RECIBO, FORMAS_PAGAMENTO } from '@/lib/types'
 
@@ -272,20 +274,6 @@ export default function RecibosPage() {
     return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9)}`
   }
 
-  if (!isFinanceiro) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Card className="p-8 text-center">
-          <Receipt className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">Acesso Restrito</h2>
-          <p className="mt-2 text-muted-foreground">
-            Apenas usuarios com cargo financeiro ou admin podem acessar esta pagina.
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -296,9 +284,16 @@ export default function RecibosPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Geracao de Recibos</h1>
-        <p className="text-muted-foreground">Gerar recibos em lote para colaboradores</p>
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard">
+          <Button variant="outline" size="icon" className="h-10 w-10">
+            <Home className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Geracao de Recibos</h1>
+          <p className="text-muted-foreground">Gerar recibos em lote para colaboradores</p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="flex-1 flex flex-col">
