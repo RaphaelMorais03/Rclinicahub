@@ -62,8 +62,10 @@ import {
   Loader2,
   Upload,
   Mail,
-  Save
+  Save,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import type { 
   Atendente, 
   Colaborador, 
@@ -516,9 +518,16 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Administracao</h1>
-        <p className="text-muted-foreground">Gerencie usuarios, permissoes e configuracoes do sistema</p>
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard">
+          <Button variant="outline" size="icon" className="h-10 w-10">
+            <Home className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Administracao</h1>
+          <p className="text-muted-foreground">Gerencie usuarios, permissoes e configuracoes do sistema</p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)} className="flex-1">

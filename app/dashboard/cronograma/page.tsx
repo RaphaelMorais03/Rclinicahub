@@ -41,8 +41,10 @@ import {
   Save,
   Printer,
   Edit,
-  CalendarDays
+  CalendarDays,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import type { Cronograma, CronogramaNota, OperacaoCaixa, OperacaoVale, OperacaoChecklist, CronoAgenda, Atendente } from '@/lib/types'
 import { CHECKLIST_PADRAO } from '@/lib/types'
 
@@ -395,9 +397,16 @@ export default function CronogramaPage() {
     <div className="flex h-full flex-col gap-6 p-6">
       {/* Header com navegacao de data */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Cronograma</h1>
-          <p className="text-muted-foreground">Agenda diaria e semanal por sala</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Cronograma</h1>
+            <p className="text-muted-foreground">Agenda diaria e semanal por sala</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => changeDate(-1)}>

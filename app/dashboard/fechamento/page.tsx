@@ -38,8 +38,10 @@ import {
   Search,
   Edit,
   Loader2,
-  Users
+  Users,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import { calcularImpostosPJ, calcularRepasse, type Profissional, FORMAS_PAGAMENTO } from '@/lib/types'
 
 interface ItemFechamento {
@@ -456,20 +458,6 @@ export default function FechamentoPage() {
     p.cpf.includes(searchTerm)
   )
 
-  if (!isFinanceiro) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Card className="p-8 text-center">
-          <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">Acesso Restrito</h2>
-          <p className="mt-2 text-muted-foreground">
-            Apenas usuarios com cargo financeiro ou admin podem acessar esta pagina.
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -481,9 +469,16 @@ export default function FechamentoPage() {
   return (
     <div className="flex h-full flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Fechamento Medico</h1>
-          <p className="text-muted-foreground">Calcular repasses com impostos PJ Presumido</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Fechamento Medico</h1>
+            <p className="text-muted-foreground">Calcular repasses com impostos PJ Presumido</p>
+          </div>
         </div>
         {saved && (
           <Badge className="bg-green-500">

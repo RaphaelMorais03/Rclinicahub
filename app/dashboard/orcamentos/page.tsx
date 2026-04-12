@@ -36,8 +36,10 @@ import {
   Building2,
   Info,
   ArrowUpDown,
-  Check
+  Check,
+  Home
 } from 'lucide-react'
+import Link from 'next/link'
 import type { CatalogoExame, Parceiro, ParceiroPreco, ExamePreco } from '@/lib/types'
 
 interface OrcamentoItem {
@@ -384,9 +386,16 @@ export default function OrcamentosPage() {
   return (
     <div className="flex h-full flex-col gap-4 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Sistema de Orcamentos</h1>
-          <p className="text-sm text-muted-foreground md:text-base">Monte orcamentos de exames com preparos e parceiros</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Home className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground md:text-3xl">Sistema de Orcamentos</h1>
+            <p className="text-sm text-muted-foreground md:text-base">Monte orcamentos de exames com preparos e parceiros</p>
+          </div>
         </div>
       </div>
 
